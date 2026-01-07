@@ -38,8 +38,16 @@ class NERModel:
                 self.nlp = spacy.load(self.model_name)
         except OSError:
             logger.warning(f"Model {self.model_name} not found. Attempting to download...")
+            # Validate model name to prevent injection
+            if not self.model_name.replace("_", "").replace("-", "").isalnum():
+                raise ValueError(f"Invalid model name: {self.model_name}")
             import subprocess
-            subprocess.run(["python", "-m", "spacy", "download", self.model_name])
+            subprocess.run(
+                ["python", "-m", "spacy", "download", self.model_name],
+                check=True,
+                shell=False,
+                capture_output=True
+            )
             self.nlp = spacy.load(self.model_name)
     
     def extract_entities(self, text: str) -> List[Dict[str, str]]:

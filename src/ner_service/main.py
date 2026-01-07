@@ -114,9 +114,12 @@ async def health_check():
         )
 
 
+from typing import Union
+
+
 @app.post(
     "/extract",
-    response_model=NERResponse | NERContextResponse,
+    response_model=Union[NERResponse, NERContextResponse],
     tags=["NER"],
     summary="Extract named entities from text"
 )

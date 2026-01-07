@@ -36,7 +36,7 @@ jobs:
     - name: Run tests
       run: |
         pip install pytest pytest-asyncio httpx
-        pytest tests/ -v || echo "Tests not yet implemented"
+        if [ -f tests/test_ner_model.py ]; then pytest tests/test_ner_model.py -v; fi
     
     - name: Build Docker image
       run: |

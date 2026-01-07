@@ -1,16 +1,16 @@
 # Core NLP and ML dependencies
 spacy==3.7.2
-fastapi==0.109.0
+fastapi==0.109.1
 uvicorn[standard]==0.27.0
 pydantic==2.5.3
-python-multipart==0.0.6
+python-multipart==0.0.18
 
 # Data handling
 pandas==2.1.4
 numpy==1.26.3
 
 # API and deployment
-gunicorn==21.2.0
+gunicorn==22.0.0
 httpx==0.26.0
 
 # Utilities
