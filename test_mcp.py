@@ -52,16 +52,17 @@ def test_server_structure():
     """Test that the MCP server script is properly structured."""
     print("\nTesting MCP server structure...")
     try:
+        import re
         with open('mcp_server.py', 'r') as f:
             content = f.read()
             
-        # Check for required components
+        # Check for required components using regex for robustness
         checks = [
-            ('Server instance', 'Server("ml-operations")' in content),
-            ('list_tools decorator', '@app.list_tools()' in content),
-            ('call_tool decorator', '@app.call_tool()' in content),
-            ('get_ml_info tool', '"get_ml_info"' in content),
-            ('check_dependencies tool', '"check_dependencies"' in content),
+            ('Server instance', re.search(r'Server\s*\(\s*["\']ml-operations["\']', content) is not None),
+            ('list_tools decorator', re.search(r'@app\.list_tools\s*\(', content) is not None),
+            ('call_tool decorator', re.search(r'@app\.call_tool\s*\(', content) is not None),
+            ('get_ml_info tool', re.search(r'["\']get_ml_info["\']', content) is not None),
+            ('check_dependencies tool', re.search(r'["\']check_dependencies["\']', content) is not None),
         ]
         
         all_passed = True

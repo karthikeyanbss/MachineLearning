@@ -6,7 +6,7 @@ This server provides tools for ML model operations via the Model Context Protoco
 
 import asyncio
 import json
-from typing import Any
+from typing import Any, List
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -18,7 +18,7 @@ app = Server("ml-operations")
 
 
 @app.list_tools()
-async def list_tools() -> list[Tool]:
+async def list_tools() -> List[Tool]:
     """List available ML operation tools."""
     return [
         Tool(
@@ -43,7 +43,7 @@ async def list_tools() -> list[Tool]:
 
 
 @app.call_tool()
-async def call_tool(name: str, arguments: Any) -> list[TextContent]:
+async def call_tool(name: str, arguments: Any) -> List[TextContent]:
     """Handle tool execution requests."""
     
     if name == "get_ml_info":
