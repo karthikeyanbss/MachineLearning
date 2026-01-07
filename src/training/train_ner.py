@@ -74,9 +74,10 @@ class NERTrainer:
         # Disable other pipelines during training
         other_pipes = [pipe for pipe in self.nlp.pipe_names if pipe != "ner"]
         
+        # Create optimizer
+        optimizer = self.nlp.create_optimizer()
+        
         with self.nlp.disable_pipes(*other_pipes):
-            optimizer = self.nlp.initialize()
-            
             for iteration in range(n_iter):
                 random.shuffle(train_data)
                 losses = {}
@@ -91,7 +92,7 @@ class NERTrainer:
                         example = Example.from_dict(doc, annotations)
                         examples.append(example)
                     
-                    self.nlp.update(examples, drop=dropout, losses=losses)
+                    self.nlp.update(examples, drop=dropout, losses=losses, sgd=optimizer)
                 
                 logger.info(f"Iteration {iteration + 1}/{n_iter} - Loss: {losses.get('ner', 0):.4f}")
         

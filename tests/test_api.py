@@ -3,14 +3,15 @@ Test suite for NER API
 """
 
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from src.ner_service.main import app
 
 
 @pytest.mark.asyncio
 async def test_root_endpoint():
     """Test root endpoint"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/")
         assert response.status_code == 200
         data = response.json()
@@ -21,7 +22,8 @@ async def test_root_endpoint():
 @pytest.mark.asyncio
 async def test_health_check():
     """Test health check endpoint"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/health")
         assert response.status_code == 200
         data = response.json()
@@ -33,7 +35,8 @@ async def test_health_check():
 @pytest.mark.asyncio
 async def test_extract_entities():
     """Test entity extraction"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             "/extract",
             json={
@@ -51,7 +54,8 @@ async def test_extract_entities():
 @pytest.mark.asyncio
 async def test_extract_entities_with_context():
     """Test entity extraction with context"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             "/extract",
             json={
@@ -69,7 +73,8 @@ async def test_extract_entities_with_context():
 @pytest.mark.asyncio
 async def test_batch_extraction():
     """Test batch entity extraction"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             "/extract/batch",
             json={
@@ -89,7 +94,8 @@ async def test_batch_extraction():
 @pytest.mark.asyncio
 async def test_empty_text():
     """Test handling of empty text"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             "/extract",
             json={"text": ""}

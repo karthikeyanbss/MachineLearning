@@ -2,7 +2,7 @@
 Pydantic models for API request/response validation
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 
 
@@ -20,13 +20,14 @@ class NERRequest(BaseModel):
     text: str = Field(..., description="Text to extract entities from", min_length=1)
     include_context: bool = Field(default=False, description="Include additional context in response")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "text": "Apple Inc. was founded by Steve Jobs in Cupertino, California.",
                 "include_context": True
             }
         }
+    )
 
 
 class NERResponse(BaseModel):
@@ -34,8 +35,8 @@ class NERResponse(BaseModel):
     entities: List[Entity] = Field(..., description="List of extracted entities")
     entity_count: int = Field(..., description="Total number of entities found")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "entities": [
                     {
@@ -49,6 +50,7 @@ class NERResponse(BaseModel):
                 "entity_count": 1
             }
         }
+    )
 
 
 class NERContextResponse(BaseModel):
@@ -61,10 +63,10 @@ class NERContextResponse(BaseModel):
 
 class BatchNERRequest(BaseModel):
     """Request model for batch NER extraction"""
-    texts: List[str] = Field(..., description="List of texts to process", min_items=1)
+    texts: List[str] = Field(..., description="List of texts to process", min_length=1)
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "texts": [
                     "Apple Inc. was founded by Steve Jobs.",
@@ -72,6 +74,7 @@ class BatchNERRequest(BaseModel):
                 ]
             }
         }
+    )
 
 
 class BatchNERResponse(BaseModel):
@@ -85,6 +88,8 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="Service status")
     model_loaded: bool = Field(..., description="Whether the NER model is loaded")
     model_name: str = Field(..., description="Name of the loaded model")
+    
+    model_config = ConfigDict(protected_namespaces=())
 
 
 class ErrorResponse(BaseModel):
