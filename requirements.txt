@@ -7,7 +7,9 @@ python-multipart==0.0.18
 
 # Data handling
 pandas==2.1.4
-numpy==1.26.3
+# Pin a numpy version compatible with Python 3.10 wheels to avoid building from source
+# spacy/thinc can fail if pip tries to build against a numpy version lacking wheels.
+numpy==1.25.2
 
 # API and deployment
 gunicorn==22.0.0

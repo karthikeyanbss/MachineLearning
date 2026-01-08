@@ -46,6 +46,17 @@ A complete, production-ready Named Entity Recognition service built with Python,
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
+  **Note:** If you encounter build errors installing `spacy` or `numpy` on Windows,
+  use Python 3.10 (recommended) or activate the project's prebuilt virtualenv.
+  To activate the venv on Windows:
+  ```powershell
+  venv\Scripts\activate
+  ```
+  Or create a venv with Python 3.10 explicitly:
+  ```powershell
+  py -3.10 -m venv venv
+  ```
+
 3. **Install dependencies**
    ```bash
    pip install -r requirements.txt
