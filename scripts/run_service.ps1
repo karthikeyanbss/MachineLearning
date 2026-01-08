@@ -36,13 +36,12 @@ Write-Host "Upgrading pip, setuptools, wheel..."
 Write-Host "Installing requirements..."
 & $pythonExe -m pip install -r requirements.txt
 
-Write-Host "Installing spaCy English model (en_core_web_sm)..."
-try {
-    & $pythonExe -m spacy download en_core_web_sm
-} catch {
-    Write-Warning "spacy download failed; installing wheel directly"
-    & $pythonExe -m pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0-py3-none-any.whl
-}
+Write-Host "Installing spaCy English model (en_core_web_sm) via matching wheel..."
+# Use model wheel version that matches spaCy 3.7.x installed in requirements
+$modelVer = "3.7.0"
+$wheelUrl = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-$modelVer/en_core_web_sm-$modelVer-py3-none-any.whl"
+Write-Host "Installing model wheel: $wheelUrl"
+& $pythonExe -m pip install $wheelUrl
 
 Write-Host "Starting API server on http://localhost:8000"
 & $pythonExe -m uvicorn src.ner_service.main:app --host 0.0.0.0 --port 8000 --reload

@@ -61,15 +61,25 @@ python -m pip install --upgrade pip setuptools wheel
 echo "Installing dependencies from requirements.txt..."
 python -m pip install -r requirements.txt
 
-echo "Installing spaCy English model (en_core_web_sm)..."
-# Try the spacy CLI; if that fails, fall back to installing the wheel directly
-if python -m spacy download en_core_web_sm; then
-    echo "✓ spaCy model downloaded"
+echo "Installing spaCy English model (en_core_web_sm) via matching wheel..."
+# Determine installed spacy version and map to model wheel version (X.Y.0)
+spacy_ver=$($PYTHON_EXE -c "import importlib,sys
+try:
+    import spacy
+    v='.'.join(spacy.__version__.split('.')[:2])+'.0'
+    print(v)
+except Exception:
+    print('')")
+
+if [ -n "$spacy_ver" ]; then
+    model_ver="3.7.0"
 else
-    echo "spacy download failed, installing wheel directly..."
-    python -m pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0-py3-none-any.whl
-    echo "✓ spaCy model wheel installed"
+    model_ver="3.7.0"
 fi
+
+wheel_url="https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-$model_ver/en_core_web_sm-$model_ver-py3-none-any.whl"
+echo "Attempting to install model wheel: $wheel_url"
+python -m pip install "$wheel_url" || echo "Failed to install model wheel: $wheel_url"
 
 # Run a quick test
 echo ""
