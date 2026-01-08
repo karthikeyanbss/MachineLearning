@@ -16,7 +16,7 @@ class Config:
     
     # Model settings
     MODEL_NAME: str = os.getenv("MODEL_NAME", "en_core_web_sm")
-    CUSTOM_MODEL_PATH: Optional[str] = os.getenv("CUSTOM_MODEL_PATH")
+    CUSTOM_MODEL_PATH: Optional[str] = os.getenv("CUSTOM_MODEL_PATH","./custom_ner_model")
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")

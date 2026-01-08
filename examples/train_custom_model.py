@@ -42,7 +42,8 @@ def main():
     test_texts = [
         "Jeff Bezos founded Amazon in Seattle.",
         "Mark Zuckerberg is the CEO of Meta Platforms.",
-        "Satya Nadella leads Microsoft from Redmond, Washington."
+        "Satya Nadella leads Microsoft from Redmond, Washington.",
+        "karthik visiting hfxtech"
     ]
     
     for text in test_texts:

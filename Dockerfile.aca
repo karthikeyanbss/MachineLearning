@@ -1,0 +1,43 @@
+# Optimized Dockerfile for Azure Container Apps (small, CPU-only)
+FROM python:3.10-slim-bullseye AS base
+
+# Create working directory
+WORKDIR /app
+
+# Install build deps only when needed, then remove
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential gcc git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy dependency manifest first to leverage Docker layer cache
+COPY requirements.txt ./
+
+# Install Python deps into system site-packages (no user dir) and clean cache
+RUN pip install --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt \
+    && rm -rf /root/.cache/pip
+
+# Copy application code
+COPY . /app
+
+# Use a lighter runtime image
+FROM python:3.10-slim-bullseye
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=base /usr/local /usr/local
+
+# Copy app files
+COPY --from=base /app /app
+
+# Expose port used by Uvicorn
+EXPOSE 8000
+
+# Recommended minimal healthcheck (ACA supports probes in container app settings)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD python -c "import sys,urllib.request; urllib.request.urlopen('http://localhost:8000/health').read(); sys.exit(0)" || exit 1
+
+ENV PYTHONUNBUFFERED=1
+
+# Default command: run uvicorn with sensible worker settings for CPU-only
+CMD ["uvicorn", "src.ner_service.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

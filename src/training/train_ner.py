@@ -151,6 +151,9 @@ def create_sample_training_data() -> List[Tuple[str, Dict]]:
         ("Mark Zuckerberg founded Facebook in 2004.", {
             "entities": [(0, 15, "PERSON"), (24, 32, "ORG")]
         }),
+        ("Karthik founded hfxtech in Novascotia.", {
+            "entities": [(0, 7, "PERSON"), (16, 22, "ORG"), (26, 36, "GPE")]
+        }),
     ]
     
     return TRAIN_DATA
