@@ -37,6 +37,23 @@ logger = logging.getLogger(__name__)
 ner_model: NERModel = None
 
 
+def _ensure_ner_model() -> NERModel:
+    """Ensure the global NER model is initialized (lazy init).
+
+    Returns the model instance or None if initialization failed.
+    """
+    global ner_model
+    if ner_model is None:
+        try:
+            logger.info("Lazy-loading NER model...")
+            ner_model = NERModel(model_name="en_core_web_sm")
+            logger.info("NER model lazy-loaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to lazy-load NER model: {e}")
+            return None
+    return ner_model
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown"""
@@ -101,10 +118,14 @@ async def health_check():
         Health status including model information
     """
     try:
+        model = ner_model or None
+        # Don't raise here; report current status. Try to lazy-load if not present.
+        if model is None:
+            model = _ensure_ner_model()
         return HealthResponse(
-            status="healthy",
-            model_loaded=ner_model is not None,
-            model_name=ner_model.model_name if ner_model else "none"
+            status="healthy" if model else "degraded",
+            model_loaded=model is not None,
+            model_name=model.model_name if model else "none"
         )
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")
@@ -134,7 +155,8 @@ async def extract_entities(request: NERRequest):
         Extracted entities with metadata
     """
     try:
-        if not ner_model:
+        model = ner_model or _ensure_ner_model()
+        if not model:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="NER model not loaded"
@@ -185,13 +207,14 @@ async def extract_entities_batch(request: BatchNERRequest):
         Results for each text
     """
     try:
-        if not ner_model:
+        model = ner_model or _ensure_ner_model()
+        if not model:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="NER model not loaded"
             )
-        
-        results_raw = ner_model.batch_extract_entities(request.texts)
+
+        results_raw = model.batch_extract_entities(request.texts)
         
         results = []
         for result in results_raw:
