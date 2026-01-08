@@ -279,6 +279,49 @@ python examples/train_custom_model.py
    - Replace `<YOUR_ACR_NAME>` with your Azure Container Registry name
    - Adjust resource limits as needed
 
+### Azure Container Apps (recommended, low-cost)
+
+For lightweight CPU-only NER APIs the cheapest, serverless option is Azure Container Apps (ACA). Build and push an optimized image, then deploy with the steps below.
+
+1. Build the image locally (uses `Dockerfile.aca`):
+
+```bash
+docker build -f Dockerfile.aca -t ner-api:latest .
+```
+
+2. Tag and push to your ACR:
+
+```bash
+az acr login --name <your-acr-name>
+docker tag ner-api:latest <your-acr-name>.azurecr.io/ner-api:latest
+docker push <your-acr-name>.azurecr.io/ner-api:latest
+```
+
+3. Create or update an Azure Container App (example):
+
+```bash
+az containerapp create \
+  --name ner-api \
+  --resource-group myRG \
+  --environment myEnv \
+  --image <your-acr-name>.azurecr.io/ner-api:latest \
+  --target-port 8000 \
+  --ingress external \
+  --registry-server <your-acr-name>.azurecr.io \
+  --registry-username $ACR_USERNAME \
+  --registry-password $ACR_PASSWORD
+```
+
+GitHub Actions: A workflow is included at `.github/workflows/aca-deploy.yml` that builds, pushes, and deploys on push. Set these repository secrets before use:
+
+- `AZURE_CREDENTIALS` — service principal JSON for `azure/login` action
+- `ACR_NAME` — ACR name (no domain)
+- `ACR_USERNAME` and `ACR_PASSWORD` — optional, used for registry auth in CLI
+- `RESOURCE_GROUP` — target resource group
+- `ACA_ENVIRONMENT` — Container Apps environment name
+- `CONTAINERAPP_NAME` — container app name
+
+
 ### CI/CD Pipeline
 
 The project includes a GitHub Actions workflow that:
@@ -287,6 +330,50 @@ The project includes a GitHub Actions workflow that:
 - Deploys to Azure on main branch updates
 
 See `.github/workflows/azure-deploy.yml` for details.
+
+### After adding GitHub Secrets / Deploying the latest
+
+Once you add the required repository secrets (see above), you can trigger the CI/CD pipeline in one of these ways.
+
+- Push a commit to `main` or any `copilot/*` branch (the workflow triggers on those pushes):
+
+```bash
+git add README.md
+git commit -m "docs: add CI/CD secret + deploy instructions"
+git push origin your-branch-name
+```
+
+- Manually run the workflow from the GitHub UI: Repository → Actions → select "CI / Build and Deploy to Azure Container Apps" → Run workflow → choose branch and run.
+
+- Use GitHub CLI to run the workflow:
+
+```bash
+gh workflow run aca-deploy.yml --ref main
+```
+
+If you prefer to deploy a specific image immediately (without waiting for the workflow), use these Azure CLI commands after pushing your image to ACR:
+
+1) Build and push into ACR (server-side build, no local Docker required):
+
+```powershell
+az acr build --registry neracr001 --image ner-api:latest -f Dockerfile.aca .
+```
+
+2) Update the Container App to use the new image:
+
+```powershell
+az containerapp update --name ner-api --resource-group ner-service-rg --image neracr001.azurecr.io/ner-api:latest
+```
+
+3) Verify the app endpoint and health:
+
+```powershell
+az containerapp show --name ner-api --resource-group ner-service-rg --query properties.configuration.ingress.fqdn -o tsv
+curl https://<FQDN>/health
+```
+
+Security note: Using the `AZURE_CREDENTIALS` service principal secret in Actions gives the workflow permission to operate on resources in the subscription. For least privilege, create a service principal with only the roles needed (`AcrPush` and a scoped role for Container Apps) and use that JSON as the `AZURE_CREDENTIALS` secret.
+
 
 ## 💻 Development
 
@@ -319,6 +406,31 @@ See `examples/api_usage.py` for comprehensive usage examples:
 
 ```bash
 python examples/api_usage.py
+```
+
+### Inspect Trained Model
+
+Quick ways to inspect a trained spaCy model saved under `output/model-last`.
+
+- One-liner (PowerShell / Windows venv):
+
+```powershell
+venv\Scripts\python.exe -c "import spacy; nlp=spacy.load('output/model-last'); doc=nlp('Jeff Bezos founded Amazon in Seattle.'); print([(ent.text, ent.label_) for ent in doc.ents])"
+```
+
+- Small script (cross-platform): create `scripts/inspect_model.py` and run it with the project's venv Python:
+
+```python
+import spacy
+nlp = spacy.load('output/model-last')
+doc = nlp("Jeff Bezos founded Amazon in Seattle.")
+print([(ent.text, ent.label_) for ent in doc.ents])
+```
+
+Run:
+
+```powershell
+venv\Scripts\python.exe scripts\inspect_model.py
 ```
 
 ## 🧪 Testing
