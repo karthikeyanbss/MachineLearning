@@ -1,0 +1,26 @@
+# Core NLP and ML dependencies
+spacy==3.7.2
+fastapi==0.109.1
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+python-multipart==0.0.18
+
+# Data handling
+pandas==2.1.4
+# Pin a numpy version compatible with Python 3.10 wheels to avoid building from source
+# spacy/thinc can fail if pip tries to build against a numpy version lacking wheels.
+numpy==1.25.2
+
+# API and deployment
+gunicorn==22.0.0
+httpx==0.26.0
+click==8.1.7
+
+# Utilities
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0

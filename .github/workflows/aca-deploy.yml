@@ -1,0 +1,74 @@
+name: CI / Build and Deploy to Azure Container Apps
+
+on:
+  push:
+    branches:
+      - main
+      - 'copilot/*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest tests/ -q
+
+  build-and-deploy:
+    name: Build, push image and deploy
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR (CLI)
+        run: az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Build and push image to ACR
+        env:
+          ACR_REGISTRY: ${{ secrets.ACR_NAME }}.azurecr.io
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -f Dockerfile.aca -t $ACR_REGISTRY/ner-api:$IMAGE_TAG .
+          docker push $ACR_REGISTRY/ner-api:$IMAGE_TAG
+
+      - name: Create/update Azure Container App
+        env:
+          ACR_REGISTRY: ${{ secrets.ACR_NAME }}.azurecr.io
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Create container app if missing
+          az containerapp show --name ${{ secrets.CONTAINERAPP_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} >/dev/null 2>&1 || \
+            az containerapp create --name ${{ secrets.CONTAINERAPP_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --environment ${{ secrets.ACA_ENVIRONMENT }} --image $ACR_REGISTRY/ner-api:$IMAGE_TAG --ingress external --target-port 8000 --registry-server ${{ secrets.ACR_NAME }}.azurecr.io --registry-username ${{ secrets.ACR_USERNAME }} --registry-password ${{ secrets.ACR_PASSWORD }}
+
+          # Update to new image
+          az containerapp update --name ${{ secrets.CONTAINERAPP_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --image $ACR_REGISTRY/ner-api:$IMAGE_TAG
+
+      - name: Show deployed endpoint
+        run: az containerapp show --name ${{ secrets.CONTAINERAPP_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv

@@ -1,0 +1,22 @@
+# Azure deployment configuration
+# This file is used by Azure App Service for deployment
+
+name: NER Service
+resourceGroup: ner-service-rg
+location: eastus
+sku: B1
+runtime: PYTHON:3.11
+
+appSettings:
+  - name: LOG_LEVEL
+    value: info
+  - name: MODEL_NAME
+    value: en_core_web_sm
+  - name: WEBSITES_PORT
+    value: 8000
+  - name: SCM_DO_BUILD_DURING_DEPLOYMENT
+    value: true
+
+deployment:
+  type: container
+  containerImage: nerservice:latest

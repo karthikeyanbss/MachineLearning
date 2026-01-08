@@ -1,0 +1,22 @@
+[
+    {
+        "text": "Apple Inc. was founded by Steve Jobs, Steve Wozniak, and Ronald Wayne in April 1976.",
+        "expected_entities": ["Apple Inc.", "Steve Jobs", "Steve Wozniak", "Ronald Wayne"]
+    },
+    {
+        "text": "Microsoft was established in Albuquerque, New Mexico by Bill Gates and Paul Allen.",
+        "expected_entities": ["Microsoft", "Albuquerque", "New Mexico", "Bill Gates", "Paul Allen"]
+    },
+    {
+        "text": "Amazon has its headquarters in Seattle, Washington. Jeff Bezos founded the company in 1994.",
+        "expected_entities": ["Amazon", "Seattle", "Washington", "Jeff Bezos"]
+    },
+    {
+        "text": "Google was founded by Larry Page and Sergey Brin while they were Ph.D. students at Stanford University in California.",
+        "expected_entities": ["Google", "Larry Page", "Sergey Brin", "Stanford University", "California"]
+    },
+    {
+        "text": "Tesla, led by Elon Musk, is headquartered in Austin, Texas.",
+        "expected_entities": ["Tesla", "Elon Musk", "Austin", "Texas"]
+    }
+]
