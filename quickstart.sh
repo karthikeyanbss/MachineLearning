@@ -8,35 +8,68 @@ echo "=========================================="
 echo "NER Service Quick Start"
 echo "=========================================="
 
-# Check Python version
-python_version=$(python3 --version 2>&1 | awk '{print $2}')
-echo "✓ Python version: $python_version"
+# Locate a Python 3.10 interpreter (preferential)
+echo "Locating Python 3.10 interpreter..."
+PYTHON_EXE=""
 
-# Create virtual environment if it doesn't exist
+if command -v py >/dev/null 2>&1; then
+    if py -3.10 -c "import sys" >/dev/null 2>&1; then
+        PYTHON_EXE="py -3.10"
+    fi
+fi
+
+if [ -z "$PYTHON_EXE" ] && command -v python3.10 >/dev/null 2>&1; then
+    PYTHON_EXE=python3.10
+fi
+
+if [ -z "$PYTHON_EXE" ] && command -v python3 >/dev/null 2>&1; then
+    PYTHON_EXE=python3
+fi
+
+if [ -z "$PYTHON_EXE" ] && command -v python >/dev/null 2>&1; then
+    PYTHON_EXE=python
+fi
+
+if [ -z "$PYTHON_EXE" ]; then
+    echo "ERROR: No Python interpreter found. Install Python 3.10+ and retry."
+    exit 1
+fi
+
+echo "Using interpreter: $PYTHON_EXE"
+
+# Create virtual environment (explicit interpreter)
 if [ ! -d "venv" ]; then
-    echo ""
-    echo "Creating virtual environment..."
-    python3 -m venv venv
+    echo "Creating virtual environment with $PYTHON_EXE..."
+    $PYTHON_EXE -m venv venv
     echo "✓ Virtual environment created"
 fi
 
-# Activate virtual environment
-echo ""
+# Activate venv (POSIX vs Windows support)
 echo "Activating virtual environment..."
-source venv/bin/activate
+if [ -f "venv/bin/activate" ]; then
+    # POSIX
+    # shellcheck disable=SC1091
+    source venv/bin/activate
+else
+    # Assume Windows (Git Bash / MSYS) or user will run PowerShell instructions
+    source venv/Scripts/activate || true
+fi
 
-# Install dependencies
-echo ""
-echo "Installing dependencies..."
-pip install --upgrade pip > /dev/null 2>&1
-pip install -r requirements.txt > /dev/null 2>&1
-echo "✓ Dependencies installed"
+echo "Installing/upgrading pip, setuptools, wheel..."
+python -m pip install --upgrade pip setuptools wheel
 
-# Download spaCy model
-echo ""
-echo "Downloading spaCy English model..."
-python -m spacy download en_core_web_sm > /dev/null 2>&1
-echo "✓ spaCy model downloaded"
+echo "Installing dependencies from requirements.txt..."
+python -m pip install -r requirements.txt
+
+echo "Installing spaCy English model (en_core_web_sm)..."
+# Try the spacy CLI; if that fails, fall back to installing the wheel directly
+if python -m spacy download en_core_web_sm; then
+    echo "✓ spaCy model downloaded"
+else
+    echo "spacy download failed, installing wheel directly..."
+    python -m pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0-py3-none-any.whl
+    echo "✓ spaCy model wheel installed"
+fi
 
 # Run a quick test
 echo ""
