@@ -521,3 +521,6 @@ For issues and questions:
 ---
 
 Built with ❤️ using Python, spaCy, and FastAPI
+
+Live URL: 
+https://ner-api.lemonbay-b25f13cd.eastus.azurecontainerapps.io/docs
